@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-"""Calculates the total unique base pairs covered by a list of intervals"""
+"""Calculates the total unique base pairs covered by a list of intervals to prevent overcounting"""
 def merge_and_sum(intersections: List[Tuple[int, int]]) -> int:
     if not intersections:
         return 0

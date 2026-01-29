@@ -99,9 +99,12 @@ def build_index():
     # Take random sample of size SUBSET_COUNT
     tracks = df.dropna(subset=['processed_file_download_url']).sample(n=SUBSET_COUNT).to_dict('records')
 
-    # Insert data into database with multithreading
+    # Parallelize track sampling across multiple CPU cores and insert results sequentially
     with ProcessPoolExecutor(max_workers=WORKERS) as executor:
         futures = {executor.submit(process_track, t): t for t in tracks}
+
+        batch_counter = 0
+
         with tqdm(total=len(tracks), desc="Sampling Tracks") as pbar:
             for future in as_completed(futures):
                 data = future.result()
@@ -113,7 +116,11 @@ def build_index():
                             (row['tid'], row['name'], row['chrom'], row['tissue'], 
                              row['cell'], row['assay'], row['source']))
                         c.execute("INSERT INTO idx_intervals VALUES (?,?,?)", (c.lastrowid, row['start'], row['end']))
-                    conn.commit()
+                    batch_counter += 1
+
+                    if batch_counter >= 100:
+                        batch_counter = 0
+                        conn.commit()
                 pbar.update(1)
     
     conn.close()
