@@ -1,7 +1,7 @@
 import sqlite3
 import uvicorn
 import os
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List, Tuple
 
@@ -18,11 +18,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+"""Calculates the total unique base pairs covered by a list of intervals"""
 def merge_and_sum(intersections: List[Tuple[int, int]]) -> int:
-    """
-    Calculates the total unique base pairs covered by a list of intervals.
-    Implements the 'Union of Intervals' algorithm in O(n log n).
-    """
     if not intersections:
         return 0
     
@@ -75,13 +72,12 @@ async def find_overlaps(
         params.append(tissue)
 
     cursor.execute(query, params)
-    rows = cursor.fetchall()
     
     # Storage for track-wise intersections
-    track_intersections = {} # { track_id: [(s, e), (s, e)...] }
+    track_intersections = {} 
     track_metadata = {}
 
-    for r in rows:
+    for r in cursor:
         tid = r['track_id']
         
         # Calculate the actual intersection with the query window
@@ -111,12 +107,10 @@ async def find_overlaps(
         res["overlap_bp"] = unique_overlap_bp
         res["overlap_pct"] = round((unique_overlap_bp / query_len) * 100, 2)
         res["hit_count"] = len(intervals)
-        # Display the target coordinates (raw)
         res["target_interval_display"] = "; ".join([f"{int(s)}-{int(e)}" for s, e in intervals])
         
         final_results.append(res)
 
-    # Sort by unique overlap size
     sorted_results = sorted(final_results, key=lambda x: x['overlap_bp'], reverse=True)
 
     return {"results": sorted_results[:maxTracks]}
