@@ -1,14 +1,15 @@
-import gzip
-import requests
-import pandas as pd
-import json
+import sqlite3
+import uvicorn
 import os
-from io import StringIO
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from concurrent.futures import ThreadPoolExecutor
+from typing import Optional, List, Tuple
 
-app = FastAPI(title="Genomic Overlap Engine")
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
+DB_PATH = os.path.join(PROJECT_ROOT, "data", "genomics_subset.db")
+
+app = FastAPI(title="Genomic Region Overlap Engine")
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,132 +18,108 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Global State ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "..", "data")
-METADATA_URL = "https://tf.lisanwanglab.org/FILER2/metadata/tracks.metadata.tsv"
-metadata_cache = None
-BOUNDARY_INDEX = {}
-
-def load_boundary_index():
-    global BOUNDARY_INDEX
-    index_path = os.path.join(DATA_DIR, "track_boundaries.json")
-    if os.path.exists(index_path):
-        with open(index_path, 'r') as f:
-            BOUNDARY_INDEX = json.load(f)
-        print(f"Loaded boundary index for {len(BOUNDARY_INDEX)} tracks.")
-
-def load_metadata():
-    global metadata_cache
-    if metadata_cache is None:
-        r = requests.get(METADATA_URL)
-        metadata_cache = pd.read_csv(StringIO(r.text), sep='\t').dropna(subset=['processed_file_download_url'])
-    return metadata_cache
-
-def check_overlap(q_start, q_end, t_start, t_end):
-    """Simple range intersection check."""
-    return q_start < t_end and t_start < q_end
-
-def fetch_and_parse_stream(track_info, query_chr, q_start, q_end):
-    """Streams the .gz file and manually checks for overlaps."""
-    url = track_info['processed_file_download_url']
-    norm_query_chr = query_chr.lower().replace('chr', '')
+def merge_and_sum(intersections: List[Tuple[int, int]]) -> int:
+    """
+    Calculates the total unique base pairs covered by a list of intervals.
+    Implements the 'Union of Intervals' algorithm in O(n log n).
+    """
+    if not intersections:
+        return 0
     
-    try:
-        # Stream the file with a timeout
-        response = requests.get(url, stream=True, timeout=5)
-        if response.status_code != 200:
-            return None
+    # Sort by start coordinate
+    intersections.sort(key=lambda x: x[0])
+    
+    total_bp = 0
+    curr_start, curr_end = intersections[0]
+    
+    for next_start, next_end in intersections[1:]:
+        if next_start < curr_end:
+            # Overlap found: extend the current boundary
+            curr_end = max(curr_end, next_end)
+        else:
+            # No overlap: add the previous block and reset
+            total_bp += (curr_end - curr_start)
+            curr_start, curr_end = next_start, next_end
+            
+    # Add the final block
+    total_bp += (curr_end - curr_start)
+    return total_bp
 
-        overlapping_regions = []
-        # Use gzip.open on the raw response stream
-        with gzip.open(response.raw, 'rt') as f:
-            for i, line in enumerate(f):
-                # Performance safeguard: don't scan more than 20,000 lines per file
-                if i > 20000: break 
-                if line.startswith(('#', 'track', 'browser')): continue
-                
-                fields = line.strip().split('\t')
-                if len(fields) < 3: continue
-                
-                # Normalize chromosome for comparison
-                t_chrom = fields[0].lower().replace('chr', '')
-                if t_chrom != norm_query_chr: continue
-                
-                try:
-                    t_start, t_end = int(fields[1]), int(fields[2])
-                    
-                    # Optimization: if files are sorted and we passed the query, stop
-                    if t_start > q_end: break
-
-                    if check_overlap(q_start, q_end, t_start, t_end):
-                        overlapping_regions.append({
-                            "chrom": fields[0],
-                            "start": t_start,
-                            "end": t_end,
-                            "extra": fields[3:6]
-                        })
-                        if len(overlapping_regions) >= 10: break
-                except ValueError:
-                    continue
-
-        if not overlapping_regions:
-            return None
-
-        return {
-            "track_name": track_info['track_name'],
-            "assay": track_info.get('assay', 'N/A'),
-            "overlap_count": len(overlapping_regions),
-            "results": overlapping_regions
-        }
-    except Exception:
-        return None
+def get_db():
+    if not os.path.exists(DB_PATH):
+        raise FileNotFoundError(f"Database not found at {DB_PATH}. Did you run indexer.py?")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 @app.get("/api/overlaps")
-async def find_overlaps(chr: str, start: int, end: int, maxTracks: int = 20):
-    meta = load_metadata()
-    norm_chr = chr.lower().replace('chr', '')
+async def find_overlaps(
+    chr: str, start: int, end: int, 
+    tissue: Optional[str] = "All", 
+    maxTracks: int = 50
+):
+    db = get_db()
+    cursor = db.cursor()
+    query_len = end - start
     
-    # 1. PRUNING: Use track_boundaries.json to identify candidates
-    candidate_tracks = []
-    for _, track in meta.iterrows():
-        tid = track['identifier']
-        if tid in BOUNDARY_INDEX:
-            bounds = BOUNDARY_INDEX[tid]
-            if norm_chr in bounds:
-                t_min, t_max = bounds[norm_chr]
-                # If query is completely outside the range, skip network call
-                if end < t_min or start > t_max:
-                    continue
-            else:
-                continue # Chromosome not in this track
+    query = """
+    SELECT m.*, idx.start as t_start, idx.end as t_end
+    FROM idx_intervals idx
+    JOIN metadata m ON idx.id = m.id
+    WHERE m.chrom = ? AND idx.start < ? AND idx.end > ?
+    """
+    params = [chr, end, start]
+
+    if tissue and tissue != "All":
+        query += " AND m.tissue = ?"
+        params.append(tissue)
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    
+    # Storage for track-wise intersections
+    track_intersections = {} # { track_id: [(s, e), (s, e)...] }
+    track_metadata = {}
+
+    for r in rows:
+        tid = r['track_id']
         
-        candidate_tracks.append(track.to_dict())
-        if len(candidate_tracks) >= maxTracks:
-            break
+        # Calculate the actual intersection with the query window
+        i_start = max(start, r['t_start'])
+        i_end = min(end, r['t_end'])
+        
+        if tid not in track_intersections:
+            track_intersections[tid] = []
+            track_metadata[tid] = {
+                "track_id": tid,
+                "track_name": r['track_name'],
+                "assay": r['assay'],
+                "tissue": r['tissue'],
+                "cell_type": r['cell_type'],
+                "source": r['source']
+            }
+        
+        track_intersections[tid].append((i_start, i_end))
 
-    # 2. SCANNING: Threaded streaming calls
+    # Calculate final unique coverage for each track
     final_results = []
-    # Lower worker count (10) for streaming to avoid overwhelming the server
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(fetch_and_parse_stream, t, chr, start, end) for t in candidate_tracks]
-        for f in futures:
-            res = f.result()
-            if res:
-                final_results.append(res)
+    for tid, intervals in track_intersections.items():
+        # Merge overlaps to avoid double-counting
+        unique_overlap_bp = merge_and_sum(intervals)
+        
+        res = track_metadata[tid]
+        res["overlap_bp"] = unique_overlap_bp
+        res["overlap_pct"] = round((unique_overlap_bp / query_len) * 100, 2)
+        res["hit_count"] = len(intervals)
+        # Display the target coordinates (raw)
+        res["target_interval_display"] = "; ".join([f"{int(s)}-{int(e)}" for s, e in intervals])
+        
+        final_results.append(res)
 
-    return {
-        "query": {"chr": chr, "start": start, "end": end},
-        "tracks_indexed_as_candidates": len(candidate_tracks),
-        "total_tracks_found": len(final_results),
-        "results": final_results
-    }
+    # Sort by unique overlap size
+    sorted_results = sorted(final_results, key=lambda x: x['overlap_bp'], reverse=True)
 
-@app.on_event("startup")
-async def startup_event():
-    load_metadata()
-    load_boundary_index()
+    return {"results": sorted_results[:maxTracks]}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)

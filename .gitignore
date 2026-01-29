@@ -8,3 +8,8 @@ venv/
 # Data/Temp
 *.bed.gz
 *.tbi
+*.tsv
+*.db
+
+# Mac
+.DS_Store
