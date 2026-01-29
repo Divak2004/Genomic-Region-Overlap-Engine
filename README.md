@@ -40,6 +40,7 @@ The current architecture is designed to handle high-volume datasets with the fol
 ---
 
 ## Installation & Usage
+Note that this project used Python 3.13.7, so installation issues may arise due to a version difference.
 
 ### 1. Setup
 ```bash
