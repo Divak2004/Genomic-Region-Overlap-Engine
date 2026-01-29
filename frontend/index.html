@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genomic Overlap Engine | Pro Edition</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.025em;
+        }
+
+        /* Search Panel */
+        .card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            color: #64748b;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: var(--primary-hover); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Stats Bar */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border-bottom: 4px solid var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; }
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 4px; }
+
+        /* Results */
+        .track-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .track-card:hover { border-color: var(--primary); }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .track-title { font-weight: 700; font-size: 1.1rem; color: #0f172a; }
+        .hit-badge {
+            background: #eef2ff;
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .track-sub { font-size: 0.85rem; color: #64748b; margin-bottom: 16px; }
+
+        .interval-container {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.85rem;
+        }
+
+        .interval-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .interval-row:last-child { border-bottom: none; }
+
+        .loading-state { text-align: center; padding: 40px; color: var(--primary); }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🧬 Genomic Overlap Engine</h1>
+        <p>Remote Tabix Querying with Local Boundary Pruning</p>
+    </div>
+
+    <div class="card">
+        <div class="grid-inputs">
+            <div class="form-group">
+                <label>Chromosome</label>
+                <input type="text" id="chr" value="chr1">
+            </div>
+            <div class="form-group">
+                <label>Start (bp)</label>
+                <input type="number" id="start" value="3915000">
+            </div>
+            <div class="form-group">
+                <label>End (bp)</label>
+                <input type="number" id="end" value="3925000">
+            </div>
+            <div class="form-group">
+                <label>Max Tracks</label>
+                <input type="number" id="maxTracks" value="50">
+            </div>
+        </div>
+        <button id="searchBtn" onclick="executeSearch()">Find Overlaps</button>
+    </div>
+
+    <div id="loading" class="loading-state hidden">
+        <div class="spinner"></div>
+        <p>Pruning 80,000 tracks & performing Tabix fetches...</p>
+    </div>
+
+    <div id="resultsView" class="hidden">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Latency</div>
+                <div id="latencyVal" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Boundary Pruned</div>
+                <div id="prunedVal" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Confirmed Tracks</div>
+                <div id="hitsVal" class="stat-value">-</div>
+            </div>
+        </div>
+        <div id="trackList"></div>
+    </div>
+</div>
+
+<script>
+    async function executeSearch() {
+        const chr = document.getElementById('chr').value;
+        const start = document.getElementById('start').value;
+        const end = document.getElementById('end').value;
+        const maxTracks = document.getElementById('maxTracks').value;
+
+        // Reset UI
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('resultsView').classList.add('hidden');
+        document.getElementById('searchBtn').disabled = true;
+
+        const startTime = performance.now();
+
+        try {
+            const url = `http://localhost:5000/api/overlaps?chr=${chr}&start=${start}&end=${end}&maxTracks=${maxTracks}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const endTime = performance.now();
+
+            // Populate Stats
+            document.getElementById('latencyVal').innerText = `${Math.round(endTime - startTime)}ms`;
+            document.getElementById('prunedVal').innerText = data.tracks_indexed_as_candidates;
+            document.getElementById('hitsVal').innerText = data.total_tracks_found;
+
+            // Render Tracks
+            const list = document.getElementById('trackList');
+            if (!data.results || data.results.length === 0) {
+                list.innerHTML = `<div class="track-card">No overlaps found in selected range.</div>`;
+            } else {
+                list.innerHTML = data.results.map(track => `
+                    <div class="track-card">
+                        <div class="track-header">
+                            <span class="track-title">${track.track_name}</span>
+                            <span class="hit-badge">${track.overlap_count} overlapping intervals</span>
+                        </div>
+                        <div class="track-sub">Assay: <strong>${track.assay}</strong></div>
+                        <div class="interval-container">
+                            ${track.results.map(row => `
+                                <div class="interval-row">
+                                    <span>${row.chrom}:${row.start.toLocaleString()}-${row.end.toLocaleString()}</span>
+                                    <span style="color: #94a3b8;">[${row.extra.join(' | ')}]</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('resultsView').classList.remove('hidden');
+        } catch (error) {
+            console.error(error);
+            alert("Connection error: Check if backend is running on port 5000.");
+        } finally {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('searchBtn').disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

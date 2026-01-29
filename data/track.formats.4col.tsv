@@ -1,0 +1,45 @@
+FILER_BED_format	FILER_BED_type	FILER_BED_schema	FILER_BED_total_columns
+bed bed_dREG	bed3+3	chrom;chromStart;chromEnd;dREg-score;dREG-p_value;center	6
+bed bed3	bed3	chrom;chromStart;chromEnd	3
+bed bed3+5 FactorbookPeaks	bed3+5	chrom;chromStart;chromEnd;TF;expNum;expScore;cell-type;canonical-TF-term	8
+bed bed4	bed4	chrom;chromStart;chromEnd;name	4
+bed bed4+2 DASHR2	bed4+2	chrom;chromStart;chromEnd;name;type;strand	6
+bed bed5	bed5	chrom;chromStart;chromEnd;name;score	5
+bed bed5 ENCODE	bed4+1	chrom;chromStart;chromEnd;name;FDR-footprints	5
+bed bed4+19 interact	bed4+19	anchorChrom;anchorStart;anchorEnd;anchorName;interactionAttr;chrom;chromStart;chromEnd;name;score;value;exp;color;sourceChrom;sourceStart;sourceEnd;sourceName;sourceStrand;targetChrom;targetStart;targetEnd;targetName;targetStrand	23
+bed bed5+30 GWAS-catalog	bed5+30	chrom;chromStart;chromEnd;SNPS;P-VALUE;REGION;REPORTED_GENE(S);MAPPED_GENE;UPSTREAM_GENE_ID;DOWNSTREAM_GENE_ID;SNP_GENE_IDS;UPSTREAM_GENE_DISTANCE;DOWNSTREAM_GENE_DISTANCE;STRONGEST_SNP-RISK_ALLELE;MERGED;SNP_ID_CURRENT;CONTEXT;INTERGENIC;RISK_ALLELE_FREQUENCY;PVALUE_MLOG;P-VALUE(TEXT);OR_or_BETA;95%-CI(TEXT);PLATFORM_[SNPS-PASSING-QC];CNV;DATE_ADDED_TO_CATALOG;PUBMEDID;FIRST_AUTHOR;DATE;JOURNAL;LINK;STUDY;DISEASE/TRAIT;INITIAL_SAMPLE_SIZE;REPLICATION_SAMPLE_SIZE	35
+bed bed6	bed6	chrom;chromStart;chromEnd;name;score;strand	6
+bed bed6+11 FactorbookMotif	bed6+11	chrom;chromStart;chromEnd;hocomoco_jaspar_TF_name;FB_score;strand;binding_sequence;FB_pwm_ID;FB_consensus_sequence;FB_ChIP-Seq_target;HOCOMOCO_pwm_ID;HOCOMOCO_Target_consensus;HOCOMOCO_q-value;JASPAR_pwm_ID;JASPAR_Target_consensus;JASPAR_q-value;ENCODE_exp_bigBed_bed_IDs	17
+bed bed6+14 qtl	bed6+14	chrom;chromStart;chromEnd;variant_id;pval;target_strand;ref;alt;target_gene_symbol;target_ensembl_id;target;z_score_non_ref;beta_non_ref;beta_se_non_ref;FDR;non_ref_af;qtl_dist_to_target;QC_info;target_info;user_input	20
+bed bed6+2 miRNA	bed6+2	chrom;chromStart;chromEnd;name;score;strand;miRNAname;expressionValue	8
+bed bed6+3 FactorbookMotifs	bed6+3	chrom;chromStart;chromEnd;motif_id;-log10(qvalue);strand;qvalue;binding_sequence;peak_region	9
+bed bed6+5 ATACdb	bed6+5	chrom;chromStart;chromEnd;name;score;strand;motif_id;pValue;qValue;binding_sequence;open_chromatin_region	11
+bed bed6+5 Homer	bed6+5	chrom;chromStart;chromEnd;name;score;strand;motifID;DNA_binding_domain;cell_type;binding_sequence;consensus_sequence	11
+bed bed6+52 DASHR	bed6+52	chrom;chromStart;chromEnd;peakID;peakScore;strand;peakExpressionValue;peakEntropy5pReadEnd;peakNormalizedEntropy5p;peakMaxEntropy5p;peakEntropy3pReadEnd;peakNormalizedEntropy3p;peakMaxEntropy3p;maxProb5p;maxProb3p;maxPos5p;maxPos3p;beforePeakReadCnt;peakFoldChange;peakRPM;peakExprPercentile;annotchrom;annotchromStart;annotchromEnd;rnaID;rnaClass;annotStrand;annotOverlap;peakOverlap;consMean0;consMin;consMax;genomicPartition_mRNA;overlapIds_mRNA;partitionchrom_mRNA;partitionStart_mRNA;partitionEnd_mRNA;partitionStrand_mRNA;partitionBpOverlap_mRNA;genomicPartition_lncRNA;overlapIds_lncRNA;partitionchrom_lncRNA;partitionStart_lncRNA;partitionEnd_lncRNA;partitionStrand_lncRNA;partitionBpOverlap_lncRNA;numRepeatOverlaps;repeat_family;repeat_id;repeatchrom;repeatStart;repeatEnd;repeatStrand;repeatBpOverlap;length;tissue;anchorID;tissueSpecificity	58
+bed bed6+8 TF_footprints	bed6+8	chrom;chromStart;chromEnd;name;length;strand;footprintStart;footprintEnd;sampleID;method;provenance;footprintScore;motifScore;fimoPvalue	14
+bed bed9	bed9	chrom;chromStart;chromEnd;name;score;strand;thickStart;thickEnd;itemRgb	9
+bed bedExonScore	bed6+3	chrom;chromStart;chromEnd;name;score;strand;signalValue;exonCount;constituitiveExons	9
+bed bedLogR	bed9+1	chrom;chromStart;chromEnd;name;score;strand;thickStart;thickEnd;reserved;logR	10
+bed bedMethyl	bed9+2	chrom;chromStart;chromEnd;name;score;strand;thickStart;thickEnd;reserved;readCount;percentMeth	11
+bed bedRnaElements	bed6+3	chrom;chromStart;chromEnd;name;score;strand;level;signif;score2	9
+bed broadPeak	bed6+3	chrom;chromStart;chromEnd;name;score;strand;signalValue;pValue;qValue	9
+bed idr_peak	bed6+8	chrom;chromStart;chromEnd;name;score;strand;localIDR;globalIDR;rep1_chromStart;rep1_chromEnd;rep1_count;rep2_chromStart;rep2_chromEnd;rep2_count	14
+bed narrowPeak	bed6+4	chrom;chromStart;chromEnd;name;score;strand;signalValue;pValue;qValue;peak	10
+bed tss_peak	bed6+5	chrom;chromStart;chromEnd;name;score;strand;count;gene_id;gene_name;tss_id;peak_cov	11
+bed bed3+1 score	bed3+1	chrom;chromStart;chromEnd;score	4
+bed bed12	bed12	chrom;chromStart;chromEnd;name;score;strand;thickStart;thickEnd;itemRgb;blockCount;blockSizes;blockStarts	12
+bed bed6+5 VISTA_enhancer	bed6+5	chrom;chromStart;chromEnd;name;score;strand;annotation;enhancer_sequence;reference_sequence;expressionPattern;Flanking_genes	11
+bed bed3+2 telomere_gaps	bed3+2	chrom;chromStart;chromEnd;size;type	5
+bed bed3+4 CADDScore	bed3+4	chrom;chromStart;chromEnd;ref;alt;rawScore;PHRED	7
+bed bed4+3 variant	bed4+3	chrom;chromStart;chromEnd;name;ref;alt;info	7
+bed bed3+6 gff	bed3+6	chrom;chromStart;chromEnd;source;type;strand;score;phase;gft/gff_attributes	9
+bed bedPolyA	bed4+7	chrom;chromStart;chromEnd;polyA-clusterID;averageExpression;strand;percent;sampleNumber;expression;abbrevation;polyA-signalSequence	11
+bed bed9+5 WGBS	bed9+5	chrom;chromStart;chromEnd;name;score;strand;thickStart;thickEnd;itemRgb;coverage;readPercent;referenceGenotype;sampleGenotype;QualityScore	14
+bed gappedPeak	bed12+3	chrom;chromStart;chromEnd;name;score;strand;thickStart;thickEnd;itemRgb;blockCount;blockSizes;blockStarts;signalValue;pValue;qValue	15
+bed narrowPeak-lifted	bed3+10	chrom(hg38);chromStart(hg38);chromEnd(hg38);chrom(hg19);chromStart(hg19);chromEnd(hg19);name;score;strand;signalValue;pValue;qValue;peak	13
+bed bed12-lifted	bed3+12	chrom(hg38);chromStart(hg38);chromEnd(hg38);chrom(hg19);chromStart(hg19);chromEnd(hg19);name;score;strand;thickStart;thickEnd;itemRgb;blockCount;blockSizes;blockStarts	15
+bed gappedPeak-lifted	bed3+15	chrom(hg38);chromStart(hg38);chromEnd(hg38);chrom(hg19);chromStart(hg19);chromEnd(hg19);name;score;strand;thickStart;thickEnd;itemRgb;blockCount;blockSizes;blockStarts;signalValue;pValue;qValue	18
+bed broadPeak-lifted	bed3+9	chrom(hg38);chromStart(hg38);chromEnd(hg38);chrom(hg19);chromStart(hg19);chromEnd(hg19);name;score;strand;signalValue;pValue;qValue	12
+bed bed3+11 ATACdb-lifted	bed3+11	chrom;chromStart;chromEnd;chrom_hg19;chromStart_hg19;chromEnd_hg19;name;score;strand;motif_id;pValue;qValue;binding_sequence;open_chromatin_region_hg38	14
+bed bed6-lifted	bed3+6	chrom(hg38);chromStart(hg38);chromEnd(hg38);chrom(hg19);chromStart(hg19);chromEnd(hg19);name;score;strand	9
+bed bed3-lifted	bed3+3	chrom(hg38);chromStart(hg38);chromEnd(hg38);chrom(hg19);chromStart(hg19);chromEnd(hg19)	6
