@@ -5,7 +5,7 @@ An engine that tries to identify which genomic tracks overlap a user-specified g
 
 The engine employs a multi-stage process to ensure both speed and biological accuracy:
 
-1.  **Spatial Filtering:** Instead of a linear scan, the engine utilizes a SQLite R-Tree index. It treats genomic intervals as 1D spatial objects, allowing the database to instantly discard non-overlapping tracks. The query logic is defined as `Target_Start < Query_End` **AND** `Target_End > Query_Start`.
+1.  **Spatial Filtering:** Instead of a linear scan, the engine utilizes a SQLite R-Tree index. It treats genomic intervals as 1D spatial objects, allowing the database to instantly discard non-overlapping tracks. The query logic is defined as `Target_Start < Query_End` and `Target_End > Query_Start`.
 2.  **Coordinate Clipping:** Once candidate intervals are found, the engine clips them to the query window boundaries using `max(Query_Start, Target_Start)` and `min(Query_End, Target_End)`.
 3.  **Union of Intervals:** To handle tracks with multiple disjoint or overlapping peaks within the same query window, the engine applies a merging algorithm, preventing double-counting when calculating how much overlap there is. 
 
@@ -24,7 +24,7 @@ The engine employs a multi-stage process to ensure both speed and biological acc
 
 The current architecture is designed to handle high-volume datasets with the following performance characteristics:
 
-* **Search Complexity (average $O(\log N)$):** By utilizing an R-Tree spatial index, query time scales logarithmically with the number of genomic intervals. This ensures that the engine remains responsive even as the database grows from thousands to millions of intervals.
+* **Search Complexity:** By utilizing an R-Tree spatial index, query time scales logarithmically with the number of genomic intervals. This ensures that the engine remains responsive even as the database grows from thousands to millions of intervals.
 * **Memory Efficiency:** The engine employs a "Streaming & Tally" approach. It does not load the entire database into memory; instead, it uses SQLite's row-iterator to process hits. This allows the system to run on low-memory environments (like a standard laptop) while querying massive datasets.
 * **Stateless Concurrency:** The FastAPI backend is stateless, allowing it to scale horizontally behind a load balancer or vertically across multiple CPU cores using Uvicorn workers.
 
